@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express from "express";
+import Project, { IProject } from "./model";
 const router = express.Router();
-import Project from "./model";
 
 console.log("[INFO] Project routes available at /api/projects");
 // GET /api/projects
@@ -29,12 +29,8 @@ router.post("/", async (req, res) => {
 });
 
 router.post("/up", async (req, res) => {
-  interface Project {
-    name: string;
-  }
-
   try {
-    const projectsData: Project[] = [
+    const projectsData: IProject[] = [
       {
         name: "Project 1",
       },

@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
-const projectSchema = new mongoose.Schema(
+export interface IProject {
+  name: string;
+}
+
+const projectSchema = new mongoose.Schema<IProject>(
   {
     name: {
       type: String,

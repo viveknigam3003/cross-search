@@ -29,9 +29,15 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.post("/up", async (req, res) => {
+router.post("/up/:count", async (req, res) => {
+  const { count } = req.params;
+
+  if (Number(count) <= 0) {
+    return res.status(400).json({ message: "Count should be greater than 0" });
+  }
+
   try {
-    const projectsData = generateProjects(10000);
+    const projectsData = generateProjects(Number(count));
 
     const projects = await Project.create(projectsData);
 

@@ -29,7 +29,11 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.post("/up/:count", async (req, res) => {
-   const { count } = req.params;
+  const { count } = req.params;
+
+  if (Number(count) <= 0) {
+    return res.status(400).json({ message: "Count should be greater than 0" });
+  }
 
   // Get Project Ids
 
@@ -104,16 +108,6 @@ router.get("/search", async (req, res) => {
       },
     ];
 
-    // const images = await Asset.find({})
-    //   .populate({
-    //     path: 'customFields.project',
-    //     model: 'Project',
-    //   })
-    //   .exec();
-
-    // const filteredImages = images.filter((image) => {
-    //     return image.customFields.project?.name.match(new RegExp(projectName as string, 'i'));
-    // });
     const filteredImages = await Asset.aggregate(pipeline).exec();
 
     res.json(filteredImages);
@@ -122,7 +116,5 @@ router.get("/search", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-export { router as imageRouter };
 
 export { router as AssetRouter };

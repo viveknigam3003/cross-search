@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express from "express";
 import { generateProjects } from "./dataFaker";
-import Project, { IProject } from "./model";
+import Project from "./model";
 const router = express.Router();
 
 console.log("[INFO] Project routes available at /api/projects");

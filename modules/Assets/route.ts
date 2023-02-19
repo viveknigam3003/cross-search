@@ -1,5 +1,7 @@
 import express, { Request, Response } from "express";
+import { PipelineStage } from "mongoose";
 import Project from "../Projects/model";
+import { generateImages } from "./dataFaker";
 import Asset from "./model";
 
 const router = express.Router();
@@ -26,7 +28,9 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/up", async (req, res) => {
+router.post("/up/:count", async (req, res) => {
+   const { count } = req.params;
+
   // Get Project Ids
 
   // Get list of ids from Project collection but randomly
@@ -34,7 +38,7 @@ router.post("/up", async (req, res) => {
   const getRandomProjectId = async () => {
     const projects = await Project.find();
     // list of random indexes within the range of projects
-    const randomIndexes = Array.from({ length: 3 }, () =>
+    const randomIndexes = Array.from({ length: Number(count) }, () =>
       Math.floor(Math.random() * projects.length)
     );
     // list of random projects ids
@@ -46,22 +50,7 @@ router.post("/up", async (req, res) => {
   const ids = await getRandomProjectId();
 
   try {
-    const images = [
-      {
-        name: "Image 1",
-        url: "https://fastly.picsum.photos/id/620/200/200.jpg?hmac=i-QlnBFXHK0SDe5o7B85DMYehiO7H-fZxsKLRrfFCcU",
-        customFields: {
-          project: ids[0],
-        },
-      },
-      {
-        name: "Image 2",
-        url: "https://fastly.picsum.photos/id/558/200/200.jpg?hmac=tFHyh9KzOASFBog3Hpj6oSkBkBr90f67Yuejl0XnFDM",
-        customFields: {
-          project: ids[1],
-        },
-      },
-    ];
+    const images = generateImages(Number(count), ids);
 
     const result = await Asset.insertMany(images);
     res.send(result);
@@ -83,45 +72,54 @@ router.delete("/down", async (req, res) => {
 });
 
 router.get("/search", async (req, res) => {
-  const { projectName } = req.query;
-
-  console.log(projectName);
+  const { projectName, page = 1, limit = 20 } = req.query;
 
   try {
-    const pipeline = [
-        {
-          $lookup: {
-            from: 'projects',
-            localField: 'customFields.projectId',
-            foreignField: '_id',
-            as: 'project'
-          }
+    const pipeline: PipelineStage[] = [
+      {
+        $lookup: {
+          from: "projects",
+          localField: "customFields.project",
+          foreignField: "_id",
+          as: "project",
         },
-        {
-          $match: {
-            'project.name': {
-              $regex: new RegExp(projectName as string, 'i')
-            }
-          }
-        }
-      ];
+      },
+      {
+        $match: {
+          "project.name": {
+            $regex: new RegExp(projectName as string, "gi"),
+          },
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
+        },
+      },
+      {
+        $skip: (Number(page) - 1) * Number(limit),
+      },
+      {
+        $limit: Number(limit),
+      },
+    ];
 
     // const images = await Asset.find({})
     //   .populate({
-    //     path: 'customFields.projectId',
+    //     path: 'customFields.project',
     //     model: 'Project',
     //   })
     //   .exec();
 
     // const filteredImages = images.filter((image) => {
-    //     return image.customFields.projectId?.name.match(new RegExp(projectName as string, 'i'));
+    //     return image.customFields.project?.name.match(new RegExp(projectName as string, 'i'));
     // });
-    const filteredImages = await Asset.aggregate(pipeline);
+    const filteredImages = await Asset.aggregate(pipeline).exec();
 
     res.json(filteredImages);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

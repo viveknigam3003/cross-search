@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express from "express";
+import { generateProjects } from "./dataFaker";
 import Project, { IProject } from "./model";
 const router = express.Router();
 
@@ -30,17 +31,7 @@ router.post("/", async (req, res) => {
 
 router.post("/up", async (req, res) => {
   try {
-    const projectsData: IProject[] = [
-      {
-        name: "Project 1",
-      },
-      {
-        name: "Project 2",
-      },
-      {
-        name: "Project 3",
-      },
-    ];
+    const projectsData = generateProjects(10000);
 
     const projects = await Project.create(projectsData);
 

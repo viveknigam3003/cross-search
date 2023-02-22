@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { PipelineStage } from "mongoose";
+import mongoose, { PipelineStage } from "mongoose";
 import Project from "../Projects/model";
 import { generateImages } from "./dataFaker";
 import Asset from "./model";
@@ -15,6 +15,7 @@ router.post("/", async (req: Request, res: Response) => {
     name,
     url,
     customFields,
+    parentFolderId: null,
   });
 
   try {
@@ -71,6 +72,25 @@ router.delete("/down", async (req, res) => {
     res.send(result);
   } catch (error) {
     console.error(error);
+    res.status(500).send("Server Error");
+  }
+});
+
+router.get("/:parentFolderId", async (req, res) => {
+  const { parentFolderId } = req.params;
+
+  if (!parentFolderId) {
+    const images = await Asset.find({ parentFolderId: null });
+    return res.send(images);
+  }
+
+  try {
+    const images = await Asset.find({
+      parentFolderId: new mongoose.Types.ObjectId(parentFolderId),
+    });
+    res.send(images);
+  } catch (err) {
+    console.error(err);
     res.status(500).send("Server Error");
   }
 });

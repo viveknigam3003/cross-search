@@ -10,6 +10,7 @@ export const generateImages = (count: number, projectIds: any[]): Assets[] => {
       customFields: {
         project: projectIds[i],
       },
+      parentFolderId: null,
     });
   }
   return images;

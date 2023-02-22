@@ -2,6 +2,7 @@ import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
 import { AssetRouter } from "./modules/Assets/route";
+import { FolderRouter } from "./modules/Folders/route";
 import { ProjectRouter } from "./modules/Projects/route";
 import { connectToMongo } from "./mongo/connect";
 
@@ -17,6 +18,7 @@ connectToMongo();
 
 app.use("/api/projects", ProjectRouter);
 app.use("/api/assets", AssetRouter);
+app.use("/api/folders", FolderRouter);
 
 app.listen(port, () => {
   console.info(`[INFO] Server Started on PORT: ${port}`);

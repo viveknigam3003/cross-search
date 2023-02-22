@@ -1,0 +1,23 @@
+{
+  "_id": "5efc0cf5e49e553f814466df",
+  "sharedWorkspaces": [],
+  "starred": false,
+  "isDeleted": false,
+  "globalShare": false,
+  "shortId": "TyxL1YQRtUDO",
+  "name": "Pehla folder",
+  "creatorId": "5b61500a0f6fdd357ce67383",
+  "workspaceId": "5eaac12f1ff41b13c47c8552",
+  "modifiedBy": null,
+  "createdAt": {
+    "$date": {
+      "$numberLong": "1593576693578"
+    }
+  },
+  "updatedAt": {
+    "$date": {
+      "$numberLong": "1593576708770"
+    }
+  },
+  "__v": 0
+}

@@ -8,6 +8,7 @@ export interface Assets {
     [key: string]: any;
     project: string & IProject;
   };
+  parentFolderId: string | null;
 }
 
 const assetsSchema = new Schema<Assets>(
@@ -25,10 +26,14 @@ const assetsSchema = new Schema<Assets>(
       of: Schema.Types.Mixed,
       default: {},
     },
+    parentFolderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Folder",
+    }
   },
   { timestamps: true }
 );
 
-const Asset = model<Assets>("Assets", assetsSchema);
+const Asset = model<Assets>("Assets_1", assetsSchema);
 
 export default Asset;

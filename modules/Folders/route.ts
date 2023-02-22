@@ -15,7 +15,7 @@ router.get("/:parentFolderId", async (req: Request, res: Response) => {
 
   console.log("Parent", parentFolderId);
 
-  if (!parentFolderId) {
+  if (parentFolderId === 'undefined') {
     const folders = await Folder.find({ parentFolderId: null });
     return res.send(folders);
   }

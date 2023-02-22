@@ -79,8 +79,11 @@ router.delete("/down", async (req, res) => {
 router.get("/:parentFolderId", async (req, res) => {
   const { parentFolderId } = req.params;
 
-  if (!parentFolderId) {
+  console.log("Parent for Assets", parentFolderId);
+
+  if (parentFolderId === "undefined") {
     const images = await Asset.find({ parentFolderId: null });
+    console.log("Images", images);
     return res.send(images);
   }
 

@@ -6,29 +6,6 @@ import Asset from "./model";
 
 const router = express.Router();
 
-// Add an image
-router.post("/", async (req: Request, res: Response) => {
-  const { name, url, customFields } = req.body;
-
-  // Create a new image instance
-  const asset = new Asset({
-    name,
-    url,
-    customFields,
-    parentFolderId: null,
-  });
-
-  try {
-    // Save the image to the database
-    await asset.save();
-
-    res.status(201).send(asset);
-  } catch (err) {
-    console.error(err);
-    res.status(400).send(err);
-  }
-});
-
 router.post("/up/:count", async (req, res) => {
   const { count } = req.params;
 
@@ -76,10 +53,8 @@ router.delete("/down", async (req, res) => {
   }
 });
 
-router.get("/:parentFolderId", async (req, res) => {
+router.get("/parent/:parentFolderId", async (req, res) => {
   const { parentFolderId } = req.params;
-
-  console.log("Parent for Assets", parentFolderId);
 
   if (parentFolderId === "undefined") {
     const images = await Asset.find({ parentFolderId: null });
@@ -137,6 +112,62 @@ router.get("/search", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// create an autocomplete route
+router.get("/autocomplete", async (req, res) => {
+  const { searchString } = req.query;
+
+  if (!searchString || searchString === "" || searchString === "undefined") {
+    return res.send([]);
+  }
+
+  const pipeline: PipelineStage[] = [
+    {
+      $search: {
+        index: "assetsAutocomplete",
+        compound: {
+          should: [
+            {
+              autocomplete: {
+                query: searchString as string,
+                path: "customFields.product",
+              },
+            },
+            {
+              autocomplete: {
+                query: searchString as string,
+                path: "customFields.brand",
+              },
+            },
+            {
+              autocomplete: {
+                query: searchString as string,
+                path: "customFields.color",
+              },
+            },
+            {
+              autocomplete: {
+                query: searchString as string,
+                path: "name",
+              },
+            },
+          ],
+        },
+      },
+    },
+    {
+      $limit: 10,
+    }
+  ];
+
+  try {
+    const result = await Asset.aggregate(pipeline);
+    res.send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
   }
 });
 

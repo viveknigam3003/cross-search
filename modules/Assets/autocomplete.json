@@ -1,0 +1,63 @@
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "customFields": {
+        "type": "document",
+        "fields": {
+          "product": [
+            {
+              "type": "string"
+            },
+            {
+              "foldDiacritics": false,
+              "maxGrams": 8,
+              "minGrams": 2,
+              "tokenization": "edgeGram",
+              "type": "autocomplete"
+            }
+          ],
+          "brand": [
+            {
+              "type": "string"
+            },
+            {
+              "foldDiacritics": false,
+              "maxGrams": 8,
+              "minGrams": 2,
+              "tokenization": "edgeGram",
+              "type": "autocomplete"
+            }
+          ],
+          "color": [
+            {
+              "type": "string"
+            },
+            {
+              "foldDiacritics": false,
+              "maxGrams": 8,
+              "minGrams": 2,
+              "tokenization": "edgeGram",
+              "type": "autocomplete"
+            }
+          ]
+        }
+      },
+      "name": [
+        {
+          "type": "stringFacet"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "foldDiacritics": false,
+          "maxGrams": 8,
+          "minGrams": 2,
+          "tokenization": "edgeGram",
+          "type": "autocomplete"
+        }
+      ]
+    }
+  }
+}

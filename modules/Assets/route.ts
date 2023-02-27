@@ -73,45 +73,100 @@ router.get("/parent/:parentFolderId", async (req, res) => {
   }
 });
 
+// router.get("/search", async (req, res) => {
+//   const { projectName, page = 1, limit = 20 } = req.query;
+
+//   try {
+//     const pipeline: PipelineStage[] = [
+//       {
+//         $lookup: {
+//           from: "projects",
+//           localField: "customFields.project",
+//           foreignField: "_id",
+//           as: "project",
+//         },
+//       },
+//       {
+//         $match: {
+//           "project.name": {
+//             $regex: new RegExp(projectName as string, "gi"),
+//           },
+//         },
+//       },
+//       {
+//         $sort: {
+//           createdAt: -1,
+//         },
+//       },
+//       {
+//         $skip: (Number(page) - 1) * Number(limit),
+//       },
+//       {
+//         $limit: Number(limit),
+//       },
+//     ];
+
+//     const filteredImages = await Asset.aggregate(pipeline).exec();
+
+//     res.json(filteredImages);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 router.get("/search", async (req, res) => {
-  const { projectName, page = 1, limit = 20 } = req.query;
+  const { searchString, limit = 20 } = req.query;
+
+  if (!searchString || searchString === "" || searchString === "undefined") {
+    return res.send([]);
+  }
+
+  const pipeline: PipelineStage[] = [
+    {
+      $search: {
+        index: "assets",
+        compound: {
+          should: [
+            {
+              text: {
+                query: searchString as string,
+                path: "name",
+              },
+            },
+            {
+              text: {
+                query: searchString as string,
+                path: "customFields.color",
+              },
+            },
+            {
+              text: {
+                query: searchString as string,
+                path: "customFields.brand",
+              },
+            },
+            {
+              text: {
+                query: searchString as string,
+                path: "customFields.product",
+              },
+            },
+          ],
+        },
+      },
+    },
+    {
+      $limit: limit as number,
+    },
+  ];
 
   try {
-    const pipeline: PipelineStage[] = [
-      {
-        $lookup: {
-          from: "projects",
-          localField: "customFields.project",
-          foreignField: "_id",
-          as: "project",
-        },
-      },
-      {
-        $match: {
-          "project.name": {
-            $regex: new RegExp(projectName as string, "gi"),
-          },
-        },
-      },
-      {
-        $sort: {
-          createdAt: -1,
-        },
-      },
-      {
-        $skip: (Number(page) - 1) * Number(limit),
-      },
-      {
-        $limit: Number(limit),
-      },
-    ];
-
-    const filteredImages = await Asset.aggregate(pipeline).exec();
-
-    res.json(filteredImages);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
+    const result = await Asset.aggregate(pipeline);
+    res.send(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Server Error");
   }
 });
 
@@ -132,25 +187,37 @@ router.get("/autocomplete", async (req, res) => {
             {
               autocomplete: {
                 query: searchString as string,
-                path: "customFields.product",
-              },
-            },
-            {
-              autocomplete: {
-                query: searchString as string,
-                path: "customFields.brand",
+                path: "name",
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
             },
             {
               autocomplete: {
                 query: searchString as string,
                 path: "customFields.color",
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
             },
             {
               autocomplete: {
                 query: searchString as string,
-                path: "name",
+                path: "customFields.product",
+                fuzzy: {
+                  maxEdits: 2,
+                },
+              },
+            },
+            {
+              autocomplete: {
+                query: searchString as string,
+                path: "customFields.brand",
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
             },
           ],
@@ -159,7 +226,7 @@ router.get("/autocomplete", async (req, res) => {
     },
     {
       $limit: 10,
-    }
+    },
   ];
 
   try {

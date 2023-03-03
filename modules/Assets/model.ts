@@ -29,6 +29,7 @@ const assetsSchema = new Schema<Assets>(
     parentFolderId: {
       type: Schema.Types.ObjectId,
       ref: "Folder",
+      default: null,
     }
   },
   { timestamps: true }

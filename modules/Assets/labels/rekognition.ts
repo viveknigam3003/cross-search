@@ -1,8 +1,8 @@
-import { config } from "dotenv";
 import AWS from "aws-sdk";
+import { config } from "dotenv";
 config();
 
-export const s3Client = new AWS.S3({
+export const rekognitionClient = new AWS.Rekognition({
   region: process.env.AWS_BUCKET_REGION || "us-east-1",
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY || "",

@@ -1,8 +1,10 @@
-import { S3 } from "aws-sdk";
+import { Rekognition, S3 } from "aws-sdk";
 import express from "express";
 import mongoose, { PipelineStage } from "mongoose";
 import Project from "../Projects/model";
 import { generateImages } from "./dataFaker";
+import { parseLabelsData } from "./labels/parseLabels";
+import { rekognitionClient } from "./labels/rekognition";
 import Asset from "./model";
 import { upload } from "./upload/multerUpload";
 import { s3Client } from "./upload/s3";
@@ -75,48 +77,6 @@ router.get("/parent/:parentFolderId", async (req, res) => {
     res.status(500).send("Server Error");
   }
 });
-
-// router.get("/search", async (req, res) => {
-//   const { projectName, page = 1, limit = 20 } = req.query;
-
-//   try {
-//     const pipeline: PipelineStage[] = [
-//       {
-//         $lookup: {
-//           from: "projects",
-//           localField: "customFields.project",
-//           foreignField: "_id",
-//           as: "project",
-//         },
-//       },
-//       {
-//         $match: {
-//           "project.name": {
-//             $regex: new RegExp(projectName as string, "gi"),
-//           },
-//         },
-//       },
-//       {
-//         $sort: {
-//           createdAt: -1,
-//         },
-//       },
-//       {
-//         $skip: (Number(page) - 1) * Number(limit),
-//       },
-//       {
-//         $limit: Number(limit),
-//       },
-//     ];
-
-//     const filteredImages = await Asset.aggregate(pipeline).exec();
-
-//     res.json(filteredImages);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// });
 
 router.get("/search", async (req, res) => {
   const { searchString, limit = 20 } = req.query;
@@ -250,14 +210,78 @@ router.post("/upload", upload.single("file"), async (req, res) => {
     ContentType: "image/jpeg", // Necessary to define the image content-type to view the photo in the browser with the link
   };
 
-  s3Client.upload(params, (err, data) => {
+  s3Client.upload(params, async (err, data) => {
     if (err) {
       console.error(err);
       res.status(500).send("Server Error");
     }
 
     if (data) {
-      res.send(data);
+      try {
+        const image = await Asset.create({
+          name: data.Key,
+          url: data.Location,
+        });
+        res.send({
+          _id: image._id,
+          name: image.name,
+          url: image.url,
+          customFields: image.customFields,
+          parentFolderId: image.parentFolderId,
+          bucket: data.Bucket,
+        });
+      } catch (error) {
+        console.error(error);
+        res.status(201).send({
+          url: data.Location,
+          fileName: data.Key,
+          bucket: data.Bucket,
+        });
+      }
+    }
+  });
+});
+
+router.get("/labels", async (req, res) => {
+  const { imageName, bucketName, imageId } = req.body;
+
+  if (!imageName || imageName === "" || imageName === "undefined") {
+    console.log("Image name is undefined");
+    return res.status(400).send("Bad Request");
+  }
+
+  const rekognitionParams: Rekognition.Types.DetectLabelsRequest = {
+    Image: {
+      S3Object: {
+        Bucket: bucketName || process.env.AWS_BUCKET_NAME || "",
+        Name: imageName,
+      },
+    },
+    MaxLabels: 10,
+    MinConfidence: 75,
+    Features: ["GENERAL_LABELS", "IMAGE_PROPERTIES"],
+  };
+
+  rekognitionClient.detectLabels(rekognitionParams, async (err, labels) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send("Server Error");
+    }
+
+    if (labels) {
+      const customFields = parseLabelsData(labels);
+
+      try {
+        const image = await Asset.findOneAndUpdate(
+          { _id: imageId },
+          { customFields },
+          { new: true }
+        );
+        res.send(image);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send("Server Error");
+      }
     }
   });
 });

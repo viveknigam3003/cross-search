@@ -212,7 +212,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
   s3Client.upload(params, async (err, data) => {
     if (err) {
-      console.error(err);
+      console.error('[ERROR, /assets/upload/s3]', err);
       res.status(500).send("Server Error");
     }
 
@@ -231,7 +231,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
           bucket: data.Bucket,
         });
       } catch (error) {
-        console.error(error);
+        console.error('[ERROR, /assets/upload/mongo]',error);
         res.status(201).send({
           url: data.Location,
           fileName: data.Key,
@@ -243,18 +243,20 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 });
 
 router.get("/labels", async (req, res) => {
-  const { imageName, bucketName, imageId } = req.body;
+  const { imageName, imageId } = req.query;
+
+  console.log(`[INFO ${new Date().toISOString()}] Fetching labels for: ${imageName}`);
 
   if (!imageName || imageName === "" || imageName === "undefined") {
-    console.log("Image name is undefined");
+    console.error("[ERROR, /assets/labels] Image name is not defined");
     return res.status(400).send("Bad Request");
   }
 
   const rekognitionParams: Rekognition.Types.DetectLabelsRequest = {
     Image: {
       S3Object: {
-        Bucket: bucketName || process.env.AWS_BUCKET_NAME || "",
-        Name: imageName,
+        Bucket: process.env.AWS_BUCKET_NAME || "",
+        Name: imageName as string,
       },
     },
     MaxLabels: 10,
@@ -264,7 +266,7 @@ router.get("/labels", async (req, res) => {
 
   rekognitionClient.detectLabels(rekognitionParams, async (err, labels) => {
     if (err) {
-      console.error(err);
+      console.error('[ERROR, /assets/labels/rekognition]', err);
       res.status(500).send("Server Error");
     }
 
@@ -279,7 +281,7 @@ router.get("/labels", async (req, res) => {
         );
         res.send(image);
       } catch (error) {
-        console.error(error);
+        console.error('[ERROR, /assets/labels/mongo', error);
         res.status(500).send("Server Error");
       }
     }

@@ -1,8 +1,11 @@
-import express, { Request, Response } from "express";
+import { S3 } from "aws-sdk";
+import express from "express";
 import mongoose, { PipelineStage } from "mongoose";
 import Project from "../Projects/model";
 import { generateImages } from "./dataFaker";
 import Asset from "./model";
+import { upload } from "./upload/multerUpload";
+import { s3Client } from "./upload/s3";
 
 const router = express.Router();
 
@@ -236,6 +239,27 @@ router.get("/autocomplete", async (req, res) => {
     console.error(err);
     res.status(500).send("Server Error");
   }
+});
+
+router.post("/upload", upload.single("file"), async (req, res) => {
+  const params: S3.Types.PutObjectRequest = {
+    Bucket: process.env.AWS_BUCKET_NAME || "", // bucket that we made earlier
+    Key: req.file?.originalname || "image", // Name of the image
+    Body: req.file?.buffer, // Body which will contain the image in buffer format
+    ACL: "public-read-write", // defining the permissions to get the public link
+    ContentType: "image/jpeg", // Necessary to define the image content-type to view the photo in the browser with the link
+  };
+
+  s3Client.upload(params, (err, data) => {
+    if (err) {
+      console.error(err);
+      res.status(500).send("Server Error");
+    }
+
+    if (data) {
+      res.send(data);
+    }
+  });
 });
 
 export { router as AssetRouter };

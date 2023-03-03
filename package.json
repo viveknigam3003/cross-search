@@ -27,16 +27,19 @@
   },
   "homepage": "https://github.com/resuminator/tsnodex#readme",
   "dependencies": {
+    "aws-sdk": "^2.1327.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "mongoose": "^6.9.2",
-    "mongoose-data-migrate": "^0.1.2"
+    "mongoose-data-migrate": "^0.1.2",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.12",
+    "@types/multer": "^1.4.7",
     "@typescript-eslint/eslint-plugin": "^4.25.0",
     "@typescript-eslint/parser": "^4.25.0",
     "eslint": "^7.27.0",

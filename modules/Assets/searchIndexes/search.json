@@ -1,0 +1,29 @@
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "name": [
+        {
+          "type": "stringFacet"
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "customFields": {
+        "type": "document",
+        "fields": {
+          "products": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "string"
+          },
+          "colors": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

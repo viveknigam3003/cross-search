@@ -79,8 +79,9 @@ router.get("/parent/:parentFolderId", async (req, res) => {
 });
 
 router.get("/search", async (req, res) => {
-  const { searchString, limit = 20 } = req.query;
+  const { searchString, limit = 12 } = req.query;
 
+  console.log("[INFO] Search String: ", searchString, "Limit: ", limit, "");
   if (!searchString || searchString === "" || searchString === "undefined") {
     return res.send([]);
   }
@@ -88,39 +89,70 @@ router.get("/search", async (req, res) => {
   const pipeline: PipelineStage[] = [
     {
       $search: {
-        index: "assets",
+        index: "assetSearch",
         compound: {
           should: [
             {
               text: {
                 query: searchString as string,
                 path: "name",
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
             },
             {
               text: {
                 query: searchString as string,
-                path: "customFields.color",
+                path: "customFields.colors",
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
             },
             {
               text: {
                 query: searchString as string,
-                path: "customFields.brand",
+                path: "customFields.tags",
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
             },
             {
               text: {
                 query: searchString as string,
-                path: "customFields.product",
+                path: "customFields.products",
+                fuzzy: {
+                  maxEdits: 2,
+                },
               },
             },
+          ],
+        },
+        highlight: {
+          path: [
+            "name",
+            "customFields.colors",
+            "customFields.products",
+            "customFields.tags",
           ],
         },
       },
     },
     {
       $limit: limit as number,
+    },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        customFields: 1,
+        url: 1,
+        highlights: {
+          $meta: "searchHighlights",
+        },
+      },
     },
   ];
 
@@ -144,7 +176,7 @@ router.get("/autocomplete", async (req, res) => {
   const pipeline: PipelineStage[] = [
     {
       $search: {
-        index: "assetsAutocomplete",
+        index: "assetAutocomplete",
         compound: {
           should: [
             {
@@ -159,7 +191,7 @@ router.get("/autocomplete", async (req, res) => {
             {
               autocomplete: {
                 query: searchString as string,
-                path: "customFields.color",
+                path: "customFields.colors",
                 fuzzy: {
                   maxEdits: 2,
                 },
@@ -168,7 +200,7 @@ router.get("/autocomplete", async (req, res) => {
             {
               autocomplete: {
                 query: searchString as string,
-                path: "customFields.product",
+                path: "customFields.products",
                 fuzzy: {
                   maxEdits: 2,
                 },
@@ -177,7 +209,7 @@ router.get("/autocomplete", async (req, res) => {
             {
               autocomplete: {
                 query: searchString as string,
-                path: "customFields.brand",
+                path: "customFields.tags",
                 fuzzy: {
                   maxEdits: 2,
                 },
@@ -185,10 +217,29 @@ router.get("/autocomplete", async (req, res) => {
             },
           ],
         },
+        highlight: {
+          path: [
+            "name",
+            "customFields.colors",
+            "customFields.products",
+            "customFields.tags",
+          ],
+        },
       },
     },
     {
-      $limit: 10,
+      $limit: 5,
+    },
+    {
+      $project: {
+        _id: 1,
+        name: 1,
+        customFields: 1,
+        url: 1,
+        highlights: {
+          $meta: "searchHighlights",
+        },
+      },
     },
   ];
 
@@ -212,7 +263,7 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 
   s3Client.upload(params, async (err, data) => {
     if (err) {
-      console.error('[ERROR, /assets/upload/s3]', err);
+      console.error("[ERROR, /assets/upload/s3]", err);
       res.status(500).send("Server Error");
     }
 
@@ -222,16 +273,21 @@ router.post("/upload", upload.single("file"), async (req, res) => {
           name: data.Key,
           url: data.Location,
         });
-        res.send({
+
+        const imageDoc = {
           _id: image._id,
           name: image.name,
           url: image.url,
           customFields: image.customFields,
           parentFolderId: image.parentFolderId,
           bucket: data.Bucket,
-        });
+        };
+
+        console.log("[INFO, /assets/upload/mongo]", imageDoc);
+
+        res.send(imageDoc);
       } catch (error) {
-        console.error('[ERROR, /assets/upload/mongo]',error);
+        console.error("[ERROR, /assets/upload/mongo]", error);
         res.status(201).send({
           url: data.Location,
           fileName: data.Key,
@@ -245,7 +301,9 @@ router.post("/upload", upload.single("file"), async (req, res) => {
 router.get("/labels", async (req, res) => {
   const { imageName, imageId } = req.query;
 
-  console.log(`[INFO ${new Date().toISOString()}] Fetching labels for: ${imageName}`);
+  console.log(
+    `[INFO ${new Date().toISOString()}] Fetching labels for: ${imageName}`
+  );
 
   if (!imageName || imageName === "" || imageName === "undefined") {
     console.error("[ERROR, /assets/labels] Image name is not defined");
@@ -266,26 +324,60 @@ router.get("/labels", async (req, res) => {
 
   rekognitionClient.detectLabels(rekognitionParams, async (err, labels) => {
     if (err) {
-      console.error('[ERROR, /assets/labels/rekognition]', err);
+      console.error("[ERROR, /assets/labels/rekognition]", err);
       res.status(500).send("Server Error");
     }
 
     if (labels) {
       const customFields = parseLabelsData(labels);
 
+      console.log("[INFO, /assets/labels/rekognition]", customFields);
       try {
         const image = await Asset.findOneAndUpdate(
           { _id: imageId },
           { customFields },
           { new: true }
         );
+        console.log("[INFO, /assets/labels/mongo updated-image]", image);
         res.send(image);
       } catch (error) {
-        console.error('[ERROR, /assets/labels/mongo', error);
+        console.error("[ERROR, /assets/labels/mongo", error);
         res.status(500).send("Server Error");
       }
     }
   });
+});
+
+router.patch("/custom-fields", async (req, res) => {
+  const { imageId, key, value } = req.body;
+
+  if (!imageId || imageId === "" || imageId === "undefined") {
+    console.error("[ERROR, /assets/custom-fields] Image id is not defined");
+    return res.status(400).send("Bad Request");
+  }
+
+  try {
+    const image = await Asset.findOne({ _id: imageId });
+
+    if (!image) {
+      console.error("[ERROR, /assets/custom-fields] Image not found");
+      return res.status(404).send("Not Found");
+    }
+
+    const customFields = image.customFields;
+    customFields[key] = value;
+
+    const updatedImage = await Asset.findOneAndUpdate(
+      { _id: imageId },
+      { customFields },
+      { new: true }
+    );
+
+    res.send(updatedImage);
+  } catch (error) {
+    console.error("[ERROR, /assets/custom-fields/mongo]", error);
+    res.status(500).send("Server Error");
+  }
 });
 
 export { router as AssetRouter };

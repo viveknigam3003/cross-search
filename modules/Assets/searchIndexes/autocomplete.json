@@ -1,0 +1,40 @@
+{
+  "mappings": {
+    "dynamic": false,
+    "fields": {
+      "customFields": {
+        "type": "document",
+        "fields": {
+          "products": {
+            "foldDiacritics": false,
+            "maxGrams": 8,
+            "minGrams": 2,
+            "tokenization": "edgeGram",
+            "type": "autocomplete"
+          },
+          "tags": {
+            "foldDiacritics": false,
+            "maxGrams": 8,
+            "minGrams": 2,
+            "tokenization": "edgeGram",
+            "type": "autocomplete"
+          },
+          "colors": {
+            "foldDiacritics": false,
+            "maxGrams": 8,
+            "minGrams": 2,
+            "tokenization": "edgeGram",
+            "type": "autocomplete"
+          }
+        }
+      },
+      "name": {
+        "foldDiacritics": false,
+        "maxGrams": 8,
+        "minGrams": 2,
+        "tokenization": "edgeGram",
+        "type": "autocomplete"
+      }
+    }
+  }
+}

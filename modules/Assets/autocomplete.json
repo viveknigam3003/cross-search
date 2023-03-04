@@ -5,7 +5,7 @@
       "customFields": {
         "type": "document",
         "fields": {
-          "product": [
+          "products": [
             {
               "type": "string"
             },
@@ -17,7 +17,7 @@
               "type": "autocomplete"
             }
           ],
-          "brand": [
+          "tags": [
             {
               "type": "string"
             },
@@ -29,7 +29,7 @@
               "type": "autocomplete"
             }
           ],
-          "color": [
+          "colors": [
             {
               "type": "string"
             },
@@ -44,9 +44,6 @@
         }
       },
       "name": [
-        {
-          "type": "stringFacet"
-        },
         {
           "type": "string"
         },

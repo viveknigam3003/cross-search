@@ -58,7 +58,7 @@ const getOtherTags = (
 };
 
 export const parseLabelsData = (res: DetectLabelsResponse) => {
-  const colors = getColorsArray(res?.ImageProperties?.DominantColors || []);
+  const colors = getColorsArray(res?.ImageProperties?.Foreground?.DominantColors || []);
   
   const labels = simplifyLabels(res.Labels || []);
   const products = getProducts(labels);

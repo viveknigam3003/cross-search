@@ -11,12 +11,16 @@ import {
 
 // Only where category is "Apparel and Accessories"
 
-const PRODUCT_KEYS = ["Apparel and Accessories"];
+const PRODUCT_KEYS = [
+  "Apparel and Accessories",
+  "Beauty and Personal Care",
+  "Technology and Computing",
+];
 
 const getColorsArray = (colors: DominantColors) => {
   const c = colors.map((color) => color.SimplifiedColor);
   const uniqueColors = [...new Set(c)].join(", ");
-    return uniqueColors;
+  return uniqueColors;
 };
 
 const simplifyLabels = (labels: Labels) => {
@@ -40,26 +44,30 @@ const simplifyLabels = (labels: Labels) => {
 const getProducts = (labelList: Array<{ keys: string; category: string }>) => {
   const list = labelList
     .filter((label) => PRODUCT_KEYS.includes(label.category))
-    .map((label) => label.keys).join(", ").split(", ");
+    .map((label) => label.keys)
+    .join(", ")
+    .split(", ");
 
-    const uniqueList = [...new Set(list)].join(", ");
-    return uniqueList;
+  const uniqueList = [...new Set(list)].join(", ");
+  return uniqueList;
 };
 
-const getOtherTags = (
-  labelList: Array<{ keys: string; category: string }>
-) => {
+const getOtherTags = (labelList: Array<{ keys: string; category: string }>) => {
   const list = labelList
     .filter((label) => !PRODUCT_KEYS.includes(label.category))
-    .map((label) => label.keys).join(", ").split(", ");
+    .map((label) => label.keys)
+    .join(", ")
+    .split(", ");
 
-    const uniqueList = [...new Set(list)].join(", ");
-    return uniqueList;
+  const uniqueList = [...new Set(list)].join(", ");
+  return uniqueList;
 };
 
 export const parseLabelsData = (res: DetectLabelsResponse) => {
-  const colors = getColorsArray(res?.ImageProperties?.Foreground?.DominantColors || []);
-  
+  const colors = getColorsArray(
+    res?.ImageProperties?.Foreground?.DominantColors || []
+  );
+
   const labels = simplifyLabels(res.Labels || []);
   const products = getProducts(labels);
   const tags = getOtherTags(labels);

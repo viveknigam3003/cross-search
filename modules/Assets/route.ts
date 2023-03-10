@@ -322,6 +322,19 @@ router.get("/labels", async (req, res) => {
     Features: ["GENERAL_LABELS", "IMAGE_PROPERTIES"],
   };
 
+  const image = await Asset.findOne({ _id: imageId });
+
+  if (
+    image?.customFields?.colors?.length > 0 ||
+    image?.customFields?.tags?.length > 0 ||
+    image?.customFields?.products?.length > 0
+  ) {
+    console.log(
+      "[INFO, /assets/labels] Image already has labels, skipping rekognition"
+    );
+    return res.send(image);
+  }
+
   rekognitionClient.detectLabels(rekognitionParams, async (err, labels) => {
     if (err) {
       console.error("[ERROR, /assets/labels/rekognition]", err);

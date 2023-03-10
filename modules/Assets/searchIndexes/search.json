@@ -2,28 +2,35 @@
   "mappings": {
     "dynamic": false,
     "fields": {
-      "name": [
-        {
-          "type": "stringFacet"
-        },
-        {
-          "type": "string"
-        }
-      ],
       "customFields": {
-        "type": "document",
         "fields": {
+          "colors": {
+            "type": "string"
+          },
           "products": {
             "type": "string"
           },
           "tags": {
             "type": "string"
-          },
-          "colors": {
-            "type": "string"
+          }
+        },
+        "type": "document"
+      },
+      "name": [
+        {
+          "type": "stringFacet"
+        },
+        {
+          "type": "string",
+          "analyzer": "lucene.standard",
+          "multi": {
+            "keywordAnalyzer": {
+              "type": "string",
+              "analyzer": "lucene.keyword"
+            }
           }
         }
-      }
+      ]
     }
   }
 }

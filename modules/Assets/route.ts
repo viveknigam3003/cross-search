@@ -1,7 +1,6 @@
 import { Rekognition, S3 } from "aws-sdk";
 import express from "express";
 import mongoose, { PipelineStage } from "mongoose";
-import Project from "../Projects/model";
 import { generateImages } from "./dataFaker";
 import { parseLabelsData } from "./labels/parseLabels";
 import { rekognitionClient } from "./labels/rekognition";
@@ -18,26 +17,8 @@ router.post("/up/:count", async (req, res) => {
     return res.status(400).json({ message: "Count should be greater than 0" });
   }
 
-  // Get Project Ids
-
-  // Get list of ids from Project collection but randomly
-  // Something like [id1, id2, id1];
-  const getRandomProjectId = async () => {
-    const projects = await Project.find();
-    // list of random indexes within the range of projects
-    const randomIndexes = Array.from({ length: Number(count) }, () =>
-      Math.floor(Math.random() * projects.length)
-    );
-    // list of random projects ids
-    const randomProjects = randomIndexes.map((index) => projects[index]._id);
-
-    return randomProjects;
-  };
-
-  const ids = await getRandomProjectId();
-
   try {
-    const images = generateImages(Number(count), ids);
+    const images = generateImages(Number(count));
 
     const result = await Asset.insertMany(images);
     res.send(result);

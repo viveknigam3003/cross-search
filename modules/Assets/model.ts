@@ -1,12 +1,10 @@
 import { model, Schema } from "mongoose";
-import { IProject } from "../Projects/model";
 
 export interface Assets {
   name: string;
   url: string;
   customFields: {
     [key: string]: any;
-    project: string & IProject;
   };
   parentFolderId: string | null;
 }
@@ -35,6 +33,6 @@ const assetsSchema = new Schema<Assets>(
   { timestamps: true }
 );
 
-const Asset = model<Assets>("Assets_1", assetsSchema);
+const Asset = model<Assets>("Assets_2", assetsSchema);
 
 export default Asset;

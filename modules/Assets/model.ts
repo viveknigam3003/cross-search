@@ -33,6 +33,6 @@ const assetsSchema = new Schema<Assets>(
   { timestamps: true }
 );
 
-const Asset = model<Assets>("Assets_2", assetsSchema);
+const Asset = model<Assets>("Assets_1", assetsSchema);
 
 export default Asset;

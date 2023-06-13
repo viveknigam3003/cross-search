@@ -10,6 +10,7 @@
         "plugin:@typescript-eslint/recommended"
     ],
     "rules": {
+        "prefer-const": "error",
         "@typescript-eslint/explicit-module-boundary-types": "off"
     }
 }
